@@ -1,4 +1,5 @@
 import { SubmitHandler, useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router';
 
 interface FormData  {
   'login': string;
@@ -11,11 +12,15 @@ export default function Login() {
       handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<FormData>();
+    } = useForm<FormData>({ mode: 'onBlur' });
+    
+    const navigate = useNavigate()
 
-  const onSubmit:SubmitHandler <FormData> = (data) => {
-      reset()
+  const onSubmit:SubmitHandler <FormData> = (data:FormData) => {
       alert(JSON.stringify(data));
+      reset()
+      navigate('/table')
+
   };
   return (
     <div>

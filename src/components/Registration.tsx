@@ -1,6 +1,5 @@
 import { Link } from "react-router"
-import Login from "./Login"
-
+import Authorization from "./Authorization"
 
 export default function Registration() {
   return (
@@ -10,7 +9,7 @@ export default function Registration() {
           <button>Войти</button>
         </Link>
           </nav>
-          <Login/>
+          <Authorization/>
     </div>
   )
 }
