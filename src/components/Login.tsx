@@ -1,19 +1,21 @@
-import { useForm } from 'react-hook-form';
+import { SubmitHandler, useForm } from 'react-hook-form';
 
-type FormData = {
-  login: string;
-  password: string;
+interface FormData  {
+  'login': string;
+  'password': string;
 };
 
 export default function Login() {
   const {
     register,
-    handleSubmit,
+      handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<FormData>();
 
-  const onSubmit = (data: FormData) => {
-    alert(JSON.stringify(data));
+  const onSubmit:SubmitHandler <FormData> = (data) => {
+      reset()
+      alert(JSON.stringify(data));
   };
   return (
     <div>
@@ -29,7 +31,7 @@ export default function Login() {
             })}
             placeholder="Введите Логин"
             type="text"
-            className="w-full p-2 border rounded bg-slate-300"
+            className="w-full p-2 border rounded bg-white-300 hover:bg-slate-200"
           />
           {errors.login && <p className="text-red-600">{errors.login?.message}</p>}
         </div>
@@ -48,11 +50,11 @@ export default function Login() {
             })}
             placeholder="Введите Пароль"
             type="password"
-            className="w-full p-2 border rounded bg-slate-300"
+            className="w-full p-2 border rounded bg-white-300 hover:bg-slate-200"
           />
           {errors.password && <p className="text-red-400 mt-3"> {errors.password.message} </p>}
         </div>
-        <button type="submit" className="w-full bg-blue-500 text-white py-2 rounded">
+        <button type="submit" className="w-full bg-sky-500 hover:bg-sky-800 text-white py-2 rounded ">
           Войти
         </button>
       </form>
