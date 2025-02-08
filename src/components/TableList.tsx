@@ -1,4 +1,6 @@
 import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import robotoBase64 from '../fonts/RobotoFonts';
 import { useState } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 
@@ -17,29 +19,44 @@ export default function TableList() {
   const {
     register,
     handleSubmit,
-    reset,
+    // reset,
     formState: { errors },
   } = useForm<IForm>({ mode: 'onBlur' });
   const [acts, setActs] = useState<IForm[]>([]);
+  const [message, setMessage] = useState('');
 
   const onSubmit: SubmitHandler<IForm> = (data: IForm) => {
     setActs((prevActs) => [...prevActs, data]);
+    setMessage('Акт успешно сохранен  ');
     console.log(data);
     // reset();
-    };
-    
-    const generatePDF = (act: IForm) => {
-        const doc = new jsPDF();
-        doc.setFont("helvetica");
-        doc.text(`Акт №${act.actNumber}`, 10, 10);
+  };
+
+  const generatePDF = (act: IForm) => {
+    const doc = new jsPDF();
+    doc.addFileToVFS('Roboto-Regular.ttf', robotoBase64);
+    doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
+    doc.setFont('Roboto', 'normal');
+
+    doc.text(`Акт №${act.actNumber}`, 10, 10);
     doc.text(`Дата: ${act.date}`, 10, 20);
-    doc.text(`Отправитель: ${act.senderName}, ${act.senderPosition}, ${act.senderOrganization}`, 10, 30);
-    doc.text(`Получатель: ${act.receiverName}, ${act.receiverPosition}, ${act.receiverOrganization}`, 10, 40);
+    doc.text(
+      `Отправитель: ${act.senderName}, ${act.senderPosition}, ${act.senderOrganization}`,
+      10,
+      30
+    );
+    doc.text(
+      `Получатель: ${act.receiverName}, ${act.receiverPosition}, ${act.receiverOrganization}`,
+      10,
+      40
+    );
+    doc.text('Подписи: _____________________', 10, 120);
     doc.save(`Акт_${act.actNumber}.pdf`);
-    }
+  };
   return (
     <div className="p-4 max-w-[500px] text-center mx-auto ">
       <h2 className="text-xl font-bold">Форма Акта</h2>
+      {message && <p className="text-green-500">{message}</p>}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 border p-4 rounded">
         <input
           {...register('actNumber', { required: 'Обязательное поле' })}
@@ -109,7 +126,7 @@ export default function TableList() {
       </form>
 
       <h2 className="text-xl font-bold mt-6">Сохранённые акты</h2>
-      <table className="w-full border mt-4">
+      <table className="w-full border mt-4" id="my-table">
         <thead>
           <tr>
             <th className="border p-2">Номер</th>
@@ -126,8 +143,13 @@ export default function TableList() {
               <td className="border p-2">{act.date}</td>
               <td className="border p-2">{act.senderName}</td>
               <td className="border p-2">{act.receiverName}</td>
-                  <td className="border p-2">
-                  <button onClick={() => generatePDF(act)} className="bg-green-500 text-white px-2 py-1 rounded">Скачать PDF</button>
+              <td className="border p-2">
+                <button
+                  onClick={() => generatePDF(act)}
+                  className="bg-green-500 text-white px-2 py-1 rounded"
+                >
+                  Скачать PDF
+                </button>
               </td>
             </tr>
           ))}
