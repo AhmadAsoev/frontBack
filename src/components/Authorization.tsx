@@ -6,22 +6,25 @@ interface FormData {
   lastName: string;
   email: string;
   password: string;
+  confirmPassword: string;
 }
 export default function Authorization() {
   const {
     register,
-    handleSubmit,
+      handleSubmit,
+    watch,
     reset,
     setValue,
     formState: { errors },
   } = useForm<FormData>({ mode: 'onBlur' });
 
-  const navigate = useNavigate();
+    const navigate = useNavigate();
+    const password = watch('password')
 
   const onSubmit: SubmitHandler<FormData> = (data: FormData) => {
     alert(JSON.stringify(data));
-      reset();
-      navigate('/table')
+    reset();
+    navigate('/table');
   };
   return (
     <div>
@@ -98,6 +101,26 @@ export default function Authorization() {
             className="w-full p-2 border rounded bg-white-300 hover:bg-slate-200"
           />
           {errors.password && <p className="text-red-400 mt-3"> {errors.password.message} </p>}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-3 mt-3">Подтвердите пароль: </label>
+          <input
+            {...register('confirmPassword', {
+              required: 'Подтвердите пароль',
+              minLength: { value: 6, message: 'Минимум 6 символов' },
+            //   pattern: {
+            //     value: /^(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{6,}$/,
+            //     message:
+            //       'Пароль должен содержать минимум 6 символов, хотя бы одну заглавную букву и одну цифру',
+                //   },
+              validate: (value) => value === password || 'Пароли не совпадают'
+            })}
+            placeholder="Подтвердите Пароль"
+            type="password"
+            className="w-full p-2 border rounded bg-white-300 hover:bg-slate-200"
+          />
+          {errors.confirmPassword && <p className="text-red-400 mt-3"> {errors.confirmPassword.message} </p>}
         </div>
         <button
           type="submit"
