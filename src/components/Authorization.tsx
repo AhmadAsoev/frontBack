@@ -21,8 +21,28 @@ export default function Authorization() {
     const navigate = useNavigate();
     const password = watch('password')
 
-  const onSubmit: SubmitHandler<FormData> = (data: FormData) => {
-    alert(JSON.stringify(data));
+  const onSubmit: SubmitHandler<FormData> = async (data: FormData) => {
+    console.log(typeof data)
+    try {
+      const response = await fetch('http://127.0.0.1:3000/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+      });
+
+      if (!response.ok) {
+        throw new Error('Ошибка при отправке данных')
+      }
+
+      const result = await response.json();
+      console.log('Успешный ответ:', result)
+      alert('Форма успешно отправлена!');
+    } catch (error) {
+      console.error("Ошибка:", error);
+      alert('Ошибка при отправке формы');
+    }
     reset();
     navigate('/table');
   };

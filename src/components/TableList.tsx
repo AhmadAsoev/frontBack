@@ -1,10 +1,12 @@
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import robotoBase64 from '../fonts/RobotoFonts';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
+// import { data } from 'react-router';
 
 interface IForm {
+  id: number;
   actNumber: number;
   senderName: string;
   senderPosition: string;
@@ -28,12 +30,64 @@ export default function TableList() {
 
   const [isOpen, setIsOpen] = useState(false);
 
-  const onSubmit: SubmitHandler<IForm> = (data: IForm) => {
-    setActs((prevActs) => [...prevActs, data]);
+  const onSubmit: SubmitHandler<IForm> = async (data: IForm) => {
+    try {
+      const response = await fetch('http://127.0.0.1:3000/tables', {
+        method: 'POST',
+        headers: {
+          'Content-type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error('Ошибка при отправке данных');
+      }
+
+      const result = await response.json();
+      console.log('Успешный ответ:', result);
+      alert('Акт успшено отправлен!');
+    } catch (error) {
+      console.error('Ошибка:', error);
+      alert('Ошибка при отправке Акта!');
+    }
     setMessage('Акт успешно сохранен  ');
-    console.log(data);
+    setIsOpen(false);
+    // console.log(data);
     // reset();
   };
+
+  const getActs = async (): Promise<IForm[]> => {
+    try {
+      const response = await fetch('http://127.0.0.1:3000/tables/list', {
+        method: 'GET',
+      });
+
+      if (!response.ok) {
+        throw new Error(`Ошибка: ${response.statusText}`);
+      }
+
+      const data: IForm[] = await response.json(); // Преобразуем ответ в JSON
+    
+
+      return data; // ВОЗВРАЩАЕМ данные!
+    } catch (error) {
+      console.error('Ошибка при загрузке актов:', error);
+      return []; // Если ошибка, возвращаем пустой массив
+    }
+  };
+  useEffect(() => {
+    const fetchActs = async () => {
+      try {
+        const actsData: IForm[] = await getActs(); // Дожидаемся данных
+        setActs(actsData);
+      } catch (error) {
+        console.error('Ошибка при загрузке актов:', error);
+      }
+    };
+
+    fetchActs();
+  }, [isOpen]);
 
   const handleOnclick = () => {
     setIsOpen(!isOpen);
@@ -60,6 +114,7 @@ export default function TableList() {
     doc.text('Подписи: _____________________', 10, 120);
     doc.save(`Акт_${act.actNumber}.pdf`);
   };
+
   return (
     <>
       <button
@@ -76,6 +131,8 @@ export default function TableList() {
             <input
               {...register('actNumber', {
                 required: 'Обязательное поле',
+                minLength: { value: 10, message: 'Должно содержать 10 цифр' },
+                maxLength: { value: 10, message: 'Максимум 10 цифр' },
               })}
               placeholder="Номер Акта"
               type="number"
@@ -204,30 +261,31 @@ export default function TableList() {
         <table className="w-full border mt-4">
           <thead>
             <tr>
-              <th className="border p-2">Номер</th>
-              <th className="border p-2">Дата</th>
+              <th className="border p-2">Номер Документа</th>
+              <th className="border p-2">Дата Документа</th>
               <th className="border p-2">Отправитель</th>
               <th className="border p-2">Получатель</th>
               <th className="border p-2">Действия</th>
             </tr>
           </thead>
           <tbody>
-            {acts.map((act, index) => (
-              <tr key={index}>
-                <td className="border p-2">{act.actNumber}</td>
-                <td className="border p-2">{act.date}</td>
-                <td className="border p-2">{act.senderName}</td>
-                <td className="border p-2">{act.receiverName}</td>
-                <td className="border p-2">
-                  <button
-                    onClick={() => generatePDF(act)}
-                    className="bg-green-500 text-white px-2 py-1 rounded"
-                  >
-                    Скачать PDF
-                  </button>
-                </td>
-              </tr>
-            ))}
+            {acts &&
+              acts.map((act, index) => (
+                <tr key={index}>
+                  <td className="border p-2">{act.actNumber}</td>
+                  <td className="border p-2">{act.date}</td>
+                  <td className="border p-2">{act.senderName}</td>
+                  <td className="border p-2">{act.receiverName}</td>
+                  <td className="border p-2">
+                    <button
+                      onClick={() => generatePDF(act)}
+                      className="bg-green-500 text-white px-2 py-1 rounded"
+                    >
+                      Скачать PDF
+                    </button>
+                  </td>
+                </tr>
+              ))}
           </tbody>
         </table>
       </div>
