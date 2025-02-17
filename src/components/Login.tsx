@@ -1,44 +1,103 @@
+import { useState, useEffect } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router';
 
-interface FormData  {
-  'login': string;
-  'password': string;
-};
+interface LoginData {
+  email: string;
+  password: string;
+}
 
 export default function Login() {
   const {
     register,
-      handleSubmit,
-    reset,
+    handleSubmit,
+    // reset,
     formState: { errors },
-    } = useForm<FormData>({ mode: 'onBlur' });
-    
-    const navigate = useNavigate()
+  } = useForm<LoginData>({ mode: 'onBlur' });
 
-  const onSubmit:SubmitHandler <FormData> = (data:FormData) => {
-      alert(JSON.stringify(data));
-      reset()
-      navigate('/table')
+  const navigate = useNavigate();
+  const [tokenData, setTokenData] = useState<string | null>('')
 
+  const getToken = async (data: LoginData): Promise<string | null> => {
+    try {
+      const response = await fetch('http://127.0.0.1:3000/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: data.email,
+          password: data.password,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Ошибка: ${response.statusText}`);
+      }
+      
+      
+      
+      const result: string = await response.json(); // Получаем токен из JSON-ответа
+      return result; // Возвращаем токен
+    } catch (error) {
+      console.error('Ошибка при авторизации:', error);
+      return null; // В случае ошибки возвращаем null
+    }
   };
+
+  const fetchToken = async (data:LoginData) => {
+    try {
+      const token: string | null  = await getToken(data); // Дожидаемся данных
+      setTokenData(token);
+    } catch (error) {
+      console.error('Ошибка при загрузке актов:', error);
+    }
+  };
+
+  const onSubmit: SubmitHandler<LoginData> = (data: LoginData) => {
+
+    fetchToken(data);
+
+    
+    if (tokenData) {
+      setTokenData(tokenData)
+      localStorage.setItem("authToken", tokenData);
+    } else {
+      setTokenData(null)
+      localStorage.removeItem("authToken"); // Лучше удалить, если токена нет
+    }
+    
+  };
+
+  useEffect(() => {
+    const token = localStorage.getItem("authToken");
+
+    if (token && token.trim() !== "") {
+      navigate("/table"); 
+    } else {
+      navigate('/login')
+    }
+  }, [navigate, tokenData]);
+
   return (
     <div>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium mb-3 mt-3">Введите Логин: </label>
+          <label className="block text-sm font-medium mb-3 mt-3">Введите Почту: </label>
           <input
-            {...register('login', {
-              required: 'Логин обязателен',
-              minLength: { value: 3, message: 'Минимум 3 символов' },
-              maxLength: { value: 20, message: 'Максимум 20 символов' },
-              pattern: { value: /^[a-zA-Z0-9]+$/, message: 'Только буквы и цифры' },
+            {...register('email', {
+              required: 'Почта обязательна',
+              minLength: { value: 4, message: 'Минимум 4 символов' },
+              pattern: {
+                value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/,
+                message: 'Неправильный формат почты',
+              },
             })}
-            placeholder="Введите Логин"
+            placeholder="Введите почту"
             type="text"
             className="w-full p-2 border rounded bg-white-300 hover:bg-slate-200"
           />
-          {errors.login && <p className="text-red-600">{errors.login?.message}</p>}
+          {errors?.email && <p className="text-red-400 mt-3"> {errors?.email.message} </p>}
         </div>
 
         <div>
@@ -59,7 +118,10 @@ export default function Login() {
           />
           {errors.password && <p className="text-red-400 mt-3"> {errors.password.message} </p>}
         </div>
-        <button type="submit" className="w-full bg-sky-500 hover:bg-sky-800 text-white py-2 rounded ">
+        <button
+          type="submit"
+          className="w-full bg-sky-500 hover:bg-sky-800 text-white py-2 rounded "
+        >
           Войти
         </button>
       </form>

@@ -3,6 +3,7 @@ import 'jspdf-autotable';
 import robotoBase64 from '../fonts/RobotoFonts';
 import { useEffect, useState } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router';
 // import { data } from 'react-router';
 
 interface IForm {
@@ -18,6 +19,19 @@ interface IForm {
 }
 
 export default function TableList() {
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    const token = localStorage.getItem("authToken");
+
+    if (token && token.trim() !== "") {
+      navigate("/table"); 
+    } else {
+      navigate('/login')
+    }
+  }, [navigate]);
+
+
   const {
     register,
     handleSubmit,
