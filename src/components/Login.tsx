@@ -17,6 +17,7 @@ export default function Login() {
 
   const navigate = useNavigate();
   const [tokenData, setTokenData] = useState<string | null>('')
+  const [serverError, setServerError] = useState('')
 
   const getToken = async (data: LoginData): Promise<string | null> => {
     try {
@@ -31,14 +32,13 @@ export default function Login() {
         }),
       });
 
+      const result: {error?: string, token?: string} = await response.json(); // Получаем токен из JSON-ответа
+
       if (!response.ok) {
-        throw new Error(`Ошибка: ${response.statusText}`);
+        setServerError(result.error|| 'Неизвестная ошибка')
       }
       
-      
-      
-      const result: string = await response.json(); // Получаем токен из JSON-ответа
-      return result; // Возвращаем токен
+      return result.token || null ; // Возвращаем токен
     } catch (error) {
       console.error('Ошибка при авторизации:', error);
       return null; // В случае ошибки возвращаем null
@@ -118,6 +118,8 @@ export default function Login() {
           />
           {errors.password && <p className="text-red-400 mt-3"> {errors.password.message} </p>}
         </div>
+        {serverError && <p className='text-red-400'>{serverError}</p>}
+
         <button
           type="submit"
           className="w-full bg-sky-500 hover:bg-sky-800 text-white py-2 rounded "

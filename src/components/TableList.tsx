@@ -19,18 +19,17 @@ interface IForm {
 }
 
 export default function TableList() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem("authToken");
+    const token = localStorage.getItem('authToken');
 
-    if (token && token.trim() !== "") {
-      navigate("/table"); 
+    if (token && token.trim() !== '') {
+      navigate('/table');
     } else {
-      navigate('/login')
+      navigate('/login');
     }
   }, [navigate]);
-
 
   const {
     register,
@@ -65,7 +64,7 @@ export default function TableList() {
       console.error('Ошибка:', error);
       alert('Ошибка при отправке Акта!');
     }
-    setMessage('Акт успешно сохранен  ');
+    setMessage('Акт успешно сохранен');
     setIsOpen(false);
     // console.log(data);
     // reset();
@@ -81,19 +80,18 @@ export default function TableList() {
         throw new Error(`Ошибка: ${response.statusText}`);
       }
 
-      const data: IForm[] = await response.json(); // Преобразуем ответ в JSON
-    
+      const data: IForm[] = await response.json();
 
-      return data; // ВОЗВРАЩАЕМ данные!
+      return data; 
     } catch (error) {
       console.error('Ошибка при загрузке актов:', error);
-      return []; // Если ошибка, возвращаем пустой массив
+      return [];
     }
   };
   useEffect(() => {
     const fetchActs = async () => {
       try {
-        const actsData: IForm[] = await getActs(); // Дожидаемся данных
+        const actsData: IForm[] = await getActs(); 
         setActs(actsData);
       } catch (error) {
         console.error('Ошибка при загрузке актов:', error);
@@ -107,12 +105,20 @@ export default function TableList() {
     setIsOpen(!isOpen);
   };
 
+  const handleLogOut = () => {
+    localStorage.removeItem('authToken')
+    navigate('/login')
+  }
+
   const generatePDF = (act: IForm) => {
     const doc = new jsPDF();
     doc.addFileToVFS('Roboto-Regular.ttf', robotoBase64);
     doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
     doc.setFont('Roboto', 'normal');
 
+    // doc.text(`АКТ ПРИЕМА-ПЕРЕДАЧИ ДОКУМЕНТОВ №${act.actNumber}`, 10, 10);
+    doc.text(`Дата: ${act.date}`, 10, 20);
+    // doc.text(`г. Душанбе`, 10, 30);
     doc.text(`Акт №${act.actNumber}`, 10, 10);
     doc.text(`Дата: ${act.date}`, 10, 20);
     doc.text(
@@ -125,6 +131,7 @@ export default function TableList() {
       10,
       40
     );
+  
     doc.text('Подписи: _____________________', 10, 120);
     doc.save(`Акт_${act.actNumber}.pdf`);
   };
@@ -137,6 +144,7 @@ export default function TableList() {
       >
         {isOpen ? `Закрыть форму` : `Открыть форму`}
       </button>
+      <button className='bg-red-500 hover:bg-red-600 rounded-xl absolute right-0  top-0 bottom-0 max-w-[200px] h-[40px]'onClick={handleLogOut}>Выйти</button>
       {isOpen && (
         <div className="p-7 max-w-[500px] text-center mx-auto  ">
           <h2 className="text-xl font-bold">Форма Акта</h2>
@@ -275,6 +283,7 @@ export default function TableList() {
         <table className="w-full border mt-4">
           <thead>
             <tr>
+              <th className="border p-2">№</th>
               <th className="border p-2">Номер Документа</th>
               <th className="border p-2">Дата Документа</th>
               <th className="border p-2">Отправитель</th>
@@ -286,6 +295,7 @@ export default function TableList() {
             {acts &&
               acts.map((act, index) => (
                 <tr key={index}>
+                  <td className="border p-2">{act.id}</td>
                   <td className="border p-2">{act.actNumber}</td>
                   <td className="border p-2">{act.date}</td>
                   <td className="border p-2">{act.senderName}</td>
